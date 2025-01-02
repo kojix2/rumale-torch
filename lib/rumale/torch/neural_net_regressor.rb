@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'rumale/base/base_estimator'
+require 'rumale/base/estimator'
 require 'rumale/base/regressor'
 require 'rumale/model_selection/shuffle_split'
 
@@ -36,9 +36,8 @@ module Rumale
     #
     #   regressor.predict(x)
     #
-    class NeuralNetRegressor
-      include Base::BaseEstimator
-      include Base::Regressor
+    class NeuralNetRegressor < Rumale::Base::Estimator
+      include Rumale::Base::Regressor
 
       # Return the neural nets defined with torch.rb.
       # @return [Torch::NN::Module]
@@ -74,6 +73,7 @@ module Rumale
       def initialize(model:, device: nil, optimizer: nil, loss: nil,
                      batch_size: 128, max_epoch: 10, shuffle: true, validation_split: 0,
                      verbose: false, random_seed: nil)
+        super()
         @model = model
         @device = device || ::Torch.device('cpu')
         @optimizer = optimizer || ::Torch::Optim::Adam.new(model.parameters)
@@ -179,11 +179,14 @@ module Rumale
       end
 
       def display_epoch(train_loader, test_loader, epoch)
+        # rubocop:disable Lint/FormatParameterMismatch
         if test_loader.nil?
           puts(format("epoch: %#{max_epoch.to_s.length}d/#{max_epoch} - loss: %.4f", epoch, evaluate(train_loader)))
         else
-          puts(format("epoch: %#{max_epoch.to_s.length}d/#{max_epoch} - loss: %.4f - val_loss: %.4f", epoch, evaluate(train_loader), evaluate(test_loader)))
+          puts(format("epoch: %#{max_epoch.to_s.length}d/#{max_epoch} - loss: %.4f - val_loss: %.4f",
+                      epoch, evaluate(train_loader), evaluate(test_loader)))
         end
+        # rubocop:enable Lint/FormatParameterMismatch
       end
 
       def evaluate(data_loader)

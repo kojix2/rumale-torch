@@ -9,7 +9,11 @@ RSpec.describe Rumale::Torch::NeuralNetRegressor do
   let(:n_samples) { x.shape[0] }
   let(:verbose) { false }
   let(:validation_split) { 0.1 }
-  let(:regressor) { described_class.new(model: model, batch_size: 20, max_epoch: 20, validation_split: validation_split, verbose: verbose).fit(x, y) }
+  let(:regressor) do
+    described_class.new(
+      model: model, batch_size: 20, max_epoch: 20, validation_split: validation_split, verbose: verbose
+    ).fit(x, y)
+  end
   let(:predicted) { regressor.predict(x) }
   let(:score) { regressor.score(x, y) }
   let(:copied) { Marshal.load(Marshal.dump(regressor)) }
@@ -20,7 +24,7 @@ RSpec.describe Rumale::Torch::NeuralNetRegressor do
     let(:y) { x[true, 0] + x[true, 1]**2 }
 
     let(:model) do
-      class MyNet < Torch::NN::Module
+      Class.new(Torch::NN::Module) do
         def initialize
           super
           @dropout = Torch::NN::Dropout.new(p: 0.1)
@@ -34,8 +38,7 @@ RSpec.describe Rumale::Torch::NeuralNetRegressor do
           x = @dropout.call(x)
           @fc2.call(x)
         end
-      end
-      MyNet.new.to(Torch.device('cpu'))
+      end.new.to(Torch.device('cpu'))
     end
 
     it 'learns the model for single target variable problem', :aggregate_failures do
@@ -77,7 +80,7 @@ RSpec.describe Rumale::Torch::NeuralNetRegressor do
     let(:n_outputs) { y.shape[1] }
 
     let(:model) do
-      class MyNet < Torch::NN::Module
+      Class.new(Torch::NN::Module) do
         def initialize
           super
           @dropout2 = Torch::NN::Dropout2d.new(p: 0.1)
@@ -91,8 +94,7 @@ RSpec.describe Rumale::Torch::NeuralNetRegressor do
           x = @dropout2.call(x)
           @fc2.call(x)
         end
-      end
-      MyNet.new.to(Torch.device('cpu'))
+      end.new.to(Torch.device('cpu'))
     end
 
     it 'learns the model for multi-target variable problem', :aggregate_failures do
